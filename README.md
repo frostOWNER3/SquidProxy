@@ -41,7 +41,7 @@ end
 setreadonly(mt, true)
 ```
 
-hwid also retarded but needs dump so good most use this 
+hwid is prob the best  but needs dump <--- (Most are paid) Free dumper on roblox but cant dump most moonsec. so good most use this 
 
 ```lua
 local hwid = "SPOOFED-HWID"
