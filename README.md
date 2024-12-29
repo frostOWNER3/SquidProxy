@@ -144,3 +144,97 @@ if oldHttpRequest and hookfunction then
     end)
 end
 ```
+
+
+
+
+
+if u need a spy we have squid spy
+
+```lua
+-- // Squid Spy
+print("[Squid Spy] Loaded")
+local r = print
+local m = getrawmetatable(game)
+local n = m.__namecall
+local os_clock = os.clock
+local os_date = os.date
+setreadonly(m, false)
+
+m.__namecall = newcclosure(function(self, ...)
+    local c = getnamecallmethod()
+    local a = {...}
+    
+    if c == "HttpGet" and type(a[1]) == "string" then
+        local url = a[1]
+        local start_time = os_clock()
+        spawn(function()
+            local timestamp = os_date("%Y-%m-%d %H:%M:%S")
+            r(("[Squid Spy] [%s] HttpGet -> URL: %s"):format(timestamp, url))
+        end)
+        local result = n(self, ...)
+        local duration = os_clock() - start_time
+        spawn(function()
+            r(("[Squid Spy] HttpGet completed in %.2f seconds"):format(duration))
+        end)
+        return result
+    elseif c == "HttpPost" and type(a[1]) == "string" then
+        local url = a[1]
+        local data = a[2] or ""
+        local headers = a[3] or {}
+        local start_time = os_clock()
+        spawn(function()
+            local timestamp = os_date("%Y-%m-%d %H:%M:%S")
+            r(("[Squid Spy] [%s] HttpPost -> URL: %s"):format(timestamp, url))
+            r("  Data: " .. tostring(data))
+            if headers and type(headers) == "table" then
+                r("  Headers:")
+                for k, v in pairs(headers) do
+                    r("    " .. tostring(k) .. ": " .. tostring(v))
+                end
+            else
+                r("  Headers: None")
+            end
+        end)
+        local result = n(self, ...)
+        local duration = os_clock() - start_time
+        spawn(function()
+            r(("[Squid Spy] HttpPost completed in %.2f seconds"):format(duration))
+        end)
+        return result
+    elseif c == "RequestAsync" and type(a[1]) == "table" then
+        local req = a[1]
+        local url = req.Url or "N/A"
+        local method = req.Method or "GET"
+        local data = req.Body or ""
+        local headers = req.Headers or {}
+        local start_time = os_clock()
+        spawn(function()
+            local timestamp = os_date("%Y-%m-%d %H:%M:%S")
+            r(("[Squid Spy] [%s] RequestAsync -> Method: %s"):format(timestamp, method))
+            r("  URL: " .. url)
+            if headers and type(headers) == "table" then
+                r("  Headers:")
+                for k, v in pairs(headers) do
+                    r("    " .. tostring(k) .. ": " .. tostring(v))
+                end
+            else
+                r("  Headers: None")
+            end
+            if data ~= "" then
+                r("  Body: " .. tostring(data))
+            end
+        end)
+        local result = n(self, ...)
+        local duration = os_clock() - start_time
+        spawn(function()
+            r(("[Squid Spy] RequestAsync completed in %.2f seconds"):format(duration))
+        end)
+        return result
+    end
+
+    return n(self, ...)
+end)
+
+setreadonly(m, true)
+```
