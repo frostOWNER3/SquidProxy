@@ -238,3 +238,32 @@ end)
 
 setreadonly(m, true)
 ```
+
+if u want scripts to stop kicking u locally
+```lua
+getgenv().PreventKickSettings = {
+    Enabled = true,
+    Notify = true -- Set to false if you don't want notifications
+}
+
+local mt = getrawmetatable(game)
+setreadonly(mt, false)
+local oldNamecall = mt.__namecall
+
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    if getgenv().PreventKickSettings.Enabled and tostring(method) == "Kick" then
+        if getgenv().PreventKickSettings.Notify then
+            game.StarterGui:SetCore("SendNotification", {
+                Title = "Kick Blocked",
+                Text = "A kick attempt was blocked. Method: " .. tostring(method),
+                Duration = 5
+            })
+        end
+        return nil
+    end
+    return oldNamecall(self, ...)
+end)
+
+setreadonly(mt, true)
+```
